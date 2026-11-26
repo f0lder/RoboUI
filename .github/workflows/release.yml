@@ -1,0 +1,76 @@
+# Publishes a GitHub release when a version tag is pushed:
+#
+#   git tag 0.2.0
+#   git push origin 0.2.0
+#
+# The tag sets the app version, so the <Version> in RoboUI.csproj doesn't need to be edited.
+# If the WINGET_TOKEN secret exists, a pull request updating f0lder.RoboUI in winget-pkgs is opened too.
+name: Release
+
+on:
+  push:
+    tags: ['[0-9]+.[0-9]+.[0-9]+']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version from tag
+        id: version
+        shell: pwsh
+        run: "\"version=$env:GITHUB_REF_NAME\" >> $env:GITHUB_OUTPUT"
+
+      - name: Test
+        run: dotnet test RoboUI.slnx -c Release
+
+      - name: Publish single-file exe
+        run: >
+          dotnet publish RoboUI/RoboUI.csproj -c Release -r win-x64 --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -p:DebugType=None
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      - name: Create GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          $hash = (Get-FileHash publish/RoboUI.exe -Algorithm SHA256).Hash
+          $notes = @"
+          Download **RoboUI.exe** and run it. No installation or .NET needed (Windows 10/11 x64).
+
+          SHA256: ``$hash``
+          "@
+          gh release create $version publish/RoboUI.exe --title "RoboUI $version" --notes "$notes" --generate-notes
+
+  winget:
+    needs: release
+    runs-on: windows-latest
+    env:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+    steps:
+      - name: Update winget manifest
+        if: env.WINGET_TOKEN != ''
+        shell: pwsh
+        run: |
+          $version = '${{ needs.release.outputs.version }}'
+          $url = "https://github.com/${{ github.repository }}/releases/download/$version/RoboUI.exe"
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          .\wingetcreate.exe update f0lder.RoboUI --version $version --urls $url --submit --token $env:WINGET_TOKEN
+
+      - name: Skipped
+        if: env.WINGET_TOKEN == ''
+        run: echo "No WINGET_TOKEN secret, so winget-pkgs was not updated."

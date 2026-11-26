@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows.Shell;
 using RoboUI.ViewModels;
 using RoboUI.Views;
 
@@ -18,6 +19,28 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         RootNavigation.SetServiceProvider(services);
         Loaded += (_, _) => RootNavigation.Navigate(typeof(HomePage));
         history.ShowHomeRequested += () => RootNavigation.Navigate(typeof(HomePage));
+
+        TaskbarItemInfo = new TaskbarItemInfo();
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        Activated += (_, _) => _viewModel.AcknowledgeTaskbarProgress();
+    }
+
+    /// <summary>Mirrors the run's progress on the taskbar button.</summary>
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainViewModel.TaskbarState):
+                TaskbarItemInfo.ProgressState = _viewModel.TaskbarState;
+                break;
+            case nameof(MainViewModel.TaskbarValue):
+                TaskbarItemInfo.ProgressValue = _viewModel.TaskbarValue;
+                break;
+            case nameof(MainViewModel.IsRunning) when !_viewModel.IsRunning && IsActive:
+                // The user is looking at the result already; no need to keep it on the taskbar.
+                _viewModel.AcknowledgeTaskbarProgress();
+                break;
+        }
     }
 
     /// <summary>While a copy runs: confirm, stop robocopy, wait for it to exit, then close.</summary>

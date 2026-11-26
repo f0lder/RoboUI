@@ -1,0 +1,23 @@
+# Builds and tests every push and pull request.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build
+        run: dotnet build RoboUI.slnx -c Release
+
+      - name: Test
+        run: dotnet test RoboUI.slnx -c Release --no-build

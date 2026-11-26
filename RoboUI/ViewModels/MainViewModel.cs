@@ -2,6 +2,7 @@ using System.IO;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Shell;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RoboUI.Core.Formatting;
@@ -120,6 +121,18 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>One-line status next to the buttons: live progress while running, then the outcome.</summary>
     [ObservableProperty] public partial string BarStatusText { get; set; } = "";
     [ObservableProperty] public partial InfoBarSeverity BarStatusSeverity { get; set; } = InfoBarSeverity.Informational;
+
+    // ---- Taskbar button progress --------------------------------------------------------------
+    // While running: green bar (red once a file has failed), or marching while the total is unknown.
+    // After a run the final state stays on the taskbar button until the window is activated.
+    [ObservableProperty] public partial TaskbarItemProgressState TaskbarState { get; set; } = TaskbarItemProgressState.None;
+    [ObservableProperty] public partial double TaskbarValue { get; set; }
+
+    /// <summary>Clears the finished run's taskbar progress once the user has seen the window.</summary>
+    public void AcknowledgeTaskbarProgress()
+    {
+        if (!IsRunning) TaskbarState = TaskbarItemProgressState.None;
+    }
 
     /// <summary>Log of the most recent run, if one was written.</summary>
     [ObservableProperty]
@@ -329,6 +342,12 @@ public sealed partial class MainViewModel : ObservableObject
             await uiLoop;
             if (job.KeepAwake) _keepAwake.Release();
             RefreshProgress();
+            (TaskbarState, TaskbarValue) = outcome switch
+            {
+                RunOutcome.Completed => (TaskbarItemProgressState.Normal, 1d),
+                RunOutcome.Stopped => (TaskbarItemProgressState.Paused, Math.Max(TaskbarValue, 0.02)),
+                _ => (TaskbarItemProgressState.Error, 1d),
+            };
             BarStatusText = $"{StatusTitle} · {ElapsedText}";
             var hasLog = logPath is not null && File.Exists(logPath);
             if (hasLog) LastLogPath = logPath;
@@ -404,6 +423,7 @@ public sealed partial class MainViewModel : ObservableObject
             BytesText = DisplayFormat.Bytes(s.ScannedBytes) + " found";
             SpeedText = "–";
             EtaText = "–";
+            TaskbarState = TaskbarItemProgressState.Indeterminate;
         }
         else
         {
@@ -418,6 +438,14 @@ public sealed partial class MainViewModel : ObservableObject
                 : DisplayFormat.Bytes(s.BytesDone);
             SpeedText = s.BytesPerSecond is { } bps ? DisplayFormat.Speed(bps) : "–";
             EtaText = s.Eta is { } eta ? DisplayFormat.Duration(eta) : "–";
+
+            if (s.Phase == CopyPhase.Copying)
+            {
+                TaskbarState = percent is null ? TaskbarItemProgressState.Indeterminate
+                    : s.FailedFiles > 0 ? TaskbarItemProgressState.Error
+                    : TaskbarItemProgressState.Normal;
+                TaskbarValue = Math.Clamp((percent ?? 0) / 100d, 0, 1);
+            }
         }
 
         ElapsedText = DisplayFormat.Duration(_runClock.Elapsed);

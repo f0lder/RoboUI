@@ -18,7 +18,7 @@ RoboUI doesn't copy anything itself. `robocopy.exe`, which ships with Windows, d
   - **Move** (`/MOVE`): copies the files, then deletes them from the source.
 - **Test run.** Runs the exact same command with `/L`, so robocopy only lists what it *would* copy or delete. Nothing on disk changes.
 - **Stop and resume.** Stop ends robocopy immediately. Resume runs the same command again: files that are already identical are skipped, and partly copied files are copied again (or continued, in restartable mode).
-- **Live progress.** Shows files and data done, speed over the last 20 seconds, time left, elapsed time, and the current file. A status line in the bottom bar keeps it visible while you scroll.
+- **Live progress.** Shows files and data done, speed over the last 20 seconds, time left, elapsed time, and the current file. A status line in the bottom bar keeps it visible while you scroll, and the taskbar button shows progress while the window is minimized.
 - **Pre-scan.** An optional listing pass first counts how many files and bytes will be copied, so the progress bar and time left are accurate.
 - **Safety first.**
   - Mirror and Move always ask before running, and the warning names the folder that will lose files.
@@ -122,10 +122,20 @@ Some design notes:
 dotnet test
 ```
 
+### Releasing
+
+Push a version tag and GitHub Actions does the rest: it runs the tests, publishes `RoboUI.exe`, creates the GitHub release, and opens a winget-pkgs pull request.
+
+```powershell
+git tag 0.2.0
+git push origin 0.2.0
+```
+
 ## Roadmap
 
 - [ ] Saved jobs in the sidebar (add, rename, duplicate, delete)
-- [ ] Taskbar progress and a tray icon
+- [x] Taskbar progress
+- [ ] Tray icon
 - [ ] Notification when a job finishes
 - [ ] Optional sleep or shut down after a job, with a countdown
 - [ ] Follow the Windows light/dark theme and accent colour
