@@ -17,4 +17,9 @@ public sealed class AppPaths
     public string LogsDirectory => Path.Combine(DataDirectory, "logs");
 
     public string HistoryFile => Path.Combine(DataDirectory, "history.json");
+
+    public string SettingsFile => Path.Combine(DataDirectory, "settings.json");
+
+    /// <summary>A copy of the app icon on disk, because Windows notifications need an icon file.</summary>
+    public string NotificationIconFile => Path.Combine(DataDirectory, "RoboUI.png");
 }

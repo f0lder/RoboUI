@@ -1,0 +1,71 @@
+<Page x:Class="RoboUI.Views.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:RoboUI.ViewModels"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+      Title="Settings"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <StackPanel Margin="24,8,24,24" MaxWidth="900" HorizontalAlignment="Stretch">
+
+    <TextBlock FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Text="Settings" />
+
+    <TextBlock Style="{StaticResource CardHeader}" Text="Notifications" />
+
+    <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Alert24}">
+      <ui:CardControl.Header>
+        <StackPanel>
+          <TextBlock Text="Notify me when a run finishes" />
+          <TextBlock Style="{StaticResource Legend}"
+                     Text="A Windows notification with the result, when a copy or test run ends. Not shown for runs you stop." />
+        </StackPanel>
+      </ui:CardControl.Header>
+      <ui:ToggleSwitch IsChecked="{Binding NotifyOnFinish}" />
+    </ui:CardControl>
+
+    <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Window24}"
+                    IsEnabled="{Binding NotifyOnFinish}">
+      <ui:CardControl.Header>
+        <StackPanel>
+          <TextBlock Text="Also when RoboUI is in front" />
+          <TextBlock Style="{StaticResource Legend}"
+                     Text="Normally you're only notified while RoboUI is minimized or behind other windows." />
+        </StackPanel>
+      </ui:CardControl.Header>
+      <ui:ToggleSwitch IsChecked="{Binding NotifyWhenActive}" />
+    </ui:CardControl>
+
+    <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon AlertOn24}">
+      <ui:CardControl.Header>
+        <StackPanel>
+          <TextBlock Text="Test" />
+          <TextBlock Style="{StaticResource Legend}"
+                     Text="Nothing appears? Windows may have notifications for RoboUI turned off, or Do not disturb is on." />
+        </StackPanel>
+      </ui:CardControl.Header>
+      <StackPanel Orientation="Horizontal">
+        <ui:Button Margin="0,0,8,0" Content="Windows settings" Icon="{ui:SymbolIcon Open24}"
+                   Command="{Binding OpenWindowsNotificationSettingsCommand}" />
+        <ui:Button Content="Send test notification" Icon="{ui:SymbolIcon Send24}"
+                   Command="{Binding SendTestNotificationCommand}" />
+      </StackPanel>
+    </ui:CardControl>
+
+    <TextBlock Margin="0,8,0,0" TextWrapping="Wrap"
+               Foreground="{DynamicResource SystemFillColorCautionBrush}"
+               Text="{Binding Message}">
+      <TextBlock.Style>
+        <Style TargetType="TextBlock">
+          <Style.Triggers>
+            <Trigger Property="Text" Value="">
+              <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+          </Style.Triggers>
+        </Style>
+      </TextBlock.Style>
+    </TextBlock>
+  </StackPanel>
+</Page>

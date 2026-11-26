@@ -26,6 +26,8 @@ RoboUI doesn't copy anything itself. `robocopy.exe`, which ships with Windows, d
   - Progress never runs ahead: a file counts as done only after robocopy has finished it.
 - **Errors panel.** Shows the latest 500 error lines with robocopy's explanation for each, and a Copy button for pasting them elsewhere.
 - **History.** Every run is kept with its outcome, counts, duration and log. **Load** puts a past run's settings back on the Home page, so after a restart you can continue a stopped job with one click.
+- **Notifications.** A Windows notification tells you when a run finishes while RoboUI is in the background. Clicking it brings RoboUI back. You can turn it off in **Settings**.
+- **Taskbar controls.** Start and Stop buttons appear in the taskbar thumbnail when you hover over RoboUI's icon.
 - **Logs.** Each run writes a Unicode log, which you can open from the app.
 - **Keeps the PC awake** while a copy runs (optional), and asks before closing the window during a copy.
 - **Live command preview** that you can copy and run yourself in a terminal.
@@ -56,7 +58,7 @@ dotnet publish RoboUI -c Release -r win-x64 --self-contained `
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-The result is in `RoboUI\bin\Release\net10.0-windows\win-x64\publish\`. It's a single file that runs on any Windows 10 or 11 x64 PC without installing .NET. The file is fairly large (roughly 70–150 MB) because it includes the runtime.
+The result is in `RoboUI\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\`. It's a single file that runs on any Windows 10 or 11 x64 PC without installing .NET. The file is fairly large (roughly 70–150 MB) because it includes the runtime.
 
 ## How to use it
 
@@ -88,6 +90,8 @@ After closing the app, open **History** and press **Load** on the stopped run. T
 |---|---|
 | Logs | `%APPDATA%\RoboUI\logs\<job>_<yyyyMMdd_HHmmss>.log` |
 | Run history (newest 200 runs) | `%APPDATA%\RoboUI\history.json` |
+| Settings | `%APPDATA%\RoboUI\settings.json` |
+| Notification name and icon | `HKCU\Software\Classes\AppUserModelId\f0lder.RoboUI`, and `%APPDATA%\RoboUI\RoboUI.png` |
 
 Nothing is sent anywhere. RoboUI has no telemetry and doesn't check for updates.
 
@@ -100,11 +104,12 @@ RoboUI.slnx
 │   ├── Robocopy/         Command builder, output parser, runner, exit-code interpreter
 │   ├── Progress/         Progress tracker, speed meter
 │   ├── History/          Run history (JSON)
+│   ├── Settings/         App settings (JSON)
 │   └── Validation/       Pre-start checks
 ├── RoboUI/               WPF app: MVVM with CommunityToolkit.Mvvm, DI via Microsoft.Extensions.Hosting
-│   ├── Views/            Home, History, About pages
+│   ├── Views/            Home, History, Settings, About pages
 │   ├── ViewModels/
-│   └── Services/         Dialogs, keep-awake, history, app paths
+│   └── Services/         Dialogs, keep-awake, history, settings, notifications, app paths
 ├── RoboUI.Core.Tests/    xUnit tests for everything in Core that doesn't start a process
 └── tools/IconGen/        Draws the app icon and writes RoboUI/Assets/RoboUI.ico, .png and .svg
 ```
@@ -136,10 +141,11 @@ git push origin 0.2.0
 - [ ] Saved jobs in the sidebar (add, rename, duplicate, delete)
 - [x] Taskbar progress
 - [ ] Tray icon
-- [ ] Notification when a job finishes
+- [x] Notification when a job finishes
+- [x] Start and Stop buttons in the taskbar thumbnail
 - [ ] Optional sleep or shut down after a job, with a countdown
 - [ ] Follow the Windows light/dark theme and accent colour
-- [ ] Settings page
+- [x] Settings page (notifications)
 
 ## Built with
 

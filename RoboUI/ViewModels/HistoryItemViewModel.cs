@@ -55,6 +55,7 @@ public sealed class HistoryItemViewModel
         parts.Add(DisplayFormat.Duration(run.Duration));
         if (run.FailedFiles > 0) parts.Add($"{run.FailedFiles:N0} failed");
         if (run.ErrorCount > 0) parts.Add(Count(run.ErrorCount, "error"));
+        ShortSummary = string.Join(" · ", parts);
         if (run.ExitCode is { } code) parts.Add($"exit code {code}");
         Summary = string.Join(" · ", parts);
 
@@ -67,6 +68,9 @@ public sealed class HistoryItemViewModel
     public string When { get; }
     public string Paths { get; }
     public string Summary { get; }
+
+    /// <summary><see cref="Summary"/> without the exit code, for notifications.</summary>
+    public string ShortSummary { get; }
     public bool HasLog { get; }
 
     /// <summary>"1 file", "2 files", "1,234 files".</summary>

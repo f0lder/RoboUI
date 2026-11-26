@@ -33,6 +33,8 @@
                                TargetPageType="{x:Type views:HistoryPage}" />
       </ui:NavigationView.MenuItems>
       <ui:NavigationView.FooterMenuItems>
+        <ui:NavigationViewItem Content="Settings" Icon="{ui:SymbolIcon Settings24}"
+                               TargetPageType="{x:Type views:SettingsPage}" />
         <ui:NavigationViewItem Content="About" Icon="{ui:SymbolIcon Info24}"
                                TargetPageType="{x:Type views:AboutPage}" />
       </ui:NavigationView.FooterMenuItems>
