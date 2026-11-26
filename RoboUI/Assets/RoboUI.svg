@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="back" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A8EE6"/><stop offset="1" stop-color="#1D5FC2"/>
+    </linearGradient>
+    <linearGradient id="front" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7CC3FF"/><stop offset="1" stop-color="#3A8BF0"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3DDC9B"/><stop offset="1" stop-color="#0E9466"/>
+    </linearGradient>
+    <mask id="gap">
+      <rect width="256" height="256" fill="#fff"/>
+      <circle cx="188" cy="188" r="62" fill="#000"/>
+    </mask>
+  </defs>
+  <g mask="url(#gap)">
+    <path d="M36,40 H96 C102,40 107,42.5 111,47 L126,64 H212 C225.3,64 236,74.7 236,88 V176 C236,189.3 225.3,200 212,200 H44 C30.7,200 20,189.3 20,176 V56 C20,47.2 27.2,40 36,40 Z" fill="url(#back)"/>
+    <path d="M20,104 C20,90.7 30.7,80 44,80 H212 C225.3,80 236,90.7 236,104 V180 C236,193.3 225.3,204 212,204 H44 C30.7,204 20,193.3 20,180 Z" fill="url(#front)"/>
+    <path d="M20,104 C20,90.7 30.7,80 44,80 H212 C225.3,80 236,90.7 236,104 V108 C236,94.7 225.3,84 212,84 H44 C30.7,84 20,94.7 20,108 Z" fill="#B5DDFF" fill-opacity="0.55"/>
+  </g>
+  <circle cx="188" cy="188" r="52" fill="url(#badge)"/>
+  <path d="M160,188 H212 M193,168 L214,188 L193,208" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

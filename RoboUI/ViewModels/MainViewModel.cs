@@ -5,6 +5,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RoboUI.Core.Formatting;
+using RoboUI.Core.History;
 using RoboUI.Core.Logging;
 using RoboUI.Core.Models;
 using RoboUI.Core.Progress;
@@ -31,6 +32,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly IDialogService _dialogs;
     private readonly IKeepAwakeService _keepAwake;
     private readonly AppPaths _paths;
+    private readonly RunHistoryService _history;
     private readonly Stopwatch _runClock = new();
 
     private readonly CopyJob _job = new();
@@ -41,12 +43,14 @@ public sealed partial class MainViewModel : ObservableObject
     private string _finishedText = "Finished";
     private bool _isTestRun;
 
-    public MainViewModel(RobocopyRunner runner, IDialogService dialogs, IKeepAwakeService keepAwake, AppPaths paths)
+    public MainViewModel(RobocopyRunner runner, IDialogService dialogs, IKeepAwakeService keepAwake, AppPaths paths, RunHistoryService history)
     {
         _runner = runner;
         _dialogs = dialogs;
         _keepAwake = keepAwake;
         _paths = paths;
+        _history = history;
+        Errors.CollectionChanged += (_, _) => CopyErrorsCommand.NotifyCanExecuteChanged();
         LoadFrom(_job);
     }
 
@@ -111,6 +115,20 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<string> Errors { get; } = [];
     [ObservableProperty] public partial string ErrorsHeader { get; set; } = "Errors";
 
+    // ---- Bottom bar --------------------------------------------------------------------------
+
+    /// <summary>One-line status next to the buttons: live progress while running, then the outcome.</summary>
+    [ObservableProperty] public partial string BarStatusText { get; set; } = "";
+    [ObservableProperty] public partial InfoBarSeverity BarStatusSeverity { get; set; } = InfoBarSeverity.Informational;
+
+    /// <summary>Log of the most recent run, if one was written.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasLastLog))]
+    [NotifyCanExecuteChangedFor(nameof(OpenLogCommand))]
+    public partial string? LastLogPath { get; set; }
+
+    public bool HasLastLog => LastLogPath is not null;
+
     // ---- Commands ----------------------------------------------------------------------------
 
     private bool CanStart() => !IsRunning;
@@ -130,6 +148,24 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void CopyCommandPreview() => _dialogs.CopyToClipboard(CommandPreview);
+
+    [RelayCommand(CanExecute = nameof(CanStart))]
+    private void SwapFolders() => (Source, Destination) = (Destination, Source);
+
+    private bool CanOpenLog() => LastLogPath is not null;
+
+    [RelayCommand(CanExecute = nameof(CanOpenLog))]
+    private void OpenLog()
+    {
+        if (LastLogPath is { } path && !_dialogs.OpenInShell(path))
+            ShowStatus(InfoBarSeverity.Error, "Cannot open the log", $"The file could not be opened:{Environment.NewLine}{path}");
+    }
+
+    private bool CanCopyErrors() => Errors.Count > 0;
+
+    /// <summary>Copies the error lines shown in the list (the newest 500).</summary>
+    [RelayCommand(CanExecute = nameof(CanCopyErrors))]
+    private void CopyErrors() => _dialogs.CopyToClipboard(string.Join(Environment.NewLine, Errors));
 
     [RelayCommand(CanExecute = nameof(CanStart))]
     private async Task StartAsync()
@@ -232,6 +268,9 @@ public sealed partial class MainViewModel : ObservableObject
         IsRunning = true;
         IsStatusOpen = false;
         _runClock.Restart();
+        var startedAt = DateTimeOffset.Now;
+        var outcome = RunOutcome.Failed;
+        int? exitCode = null;
         if (job.KeepAwake) _keepAwake.Acquire();
 
         var uiLoop = RunUiLoopAsync(uiLoopStop.Token);
@@ -245,6 +284,7 @@ public sealed partial class MainViewModel : ObservableObject
                 if (scan.Run.StoppedByUser)
                 {
                     tracker.CompletePass(stoppedByUser: true);
+                    outcome = RunOutcome.Stopped;
                     ShowStopped();
                     return;
                 }
@@ -255,6 +295,21 @@ public sealed partial class MainViewModel : ObservableObject
             var pass = testRun ? RobocopyPass.TestRun : RobocopyPass.Copy;
             var result = await _runner.RunAsync(job, pass, tracker, logPath, deletionsConfirmed, stopSource.Token);
             tracker.CompletePass(result.StoppedByUser);
+
+            if (result.Interpretation is { } interpretation)
+            {
+                exitCode = interpretation.Code;
+                outcome = interpretation.Severity switch
+                {
+                    RunSeverity.Success => RunOutcome.Completed,
+                    RunSeverity.Failure => RunOutcome.CompletedWithErrors,
+                    _ => RunOutcome.Failed,
+                };
+            }
+            else if (result.StoppedByUser)
+            {
+                outcome = RunOutcome.Stopped;
+            }
 
             if (result.StoppedByUser) ShowStopped();
             else if (testRun) ShowTestRunResult(job, tracker.GetSnapshot(_runClock.Elapsed), result.Interpretation!, logPath);
@@ -274,9 +329,44 @@ public sealed partial class MainViewModel : ObservableObject
             await uiLoop;
             if (job.KeepAwake) _keepAwake.Release();
             RefreshProgress();
+            BarStatusText = $"{StatusTitle} · {ElapsedText}";
+            var hasLog = logPath is not null && File.Exists(logPath);
+            if (hasLog) LastLogPath = logPath;
             _stopSource = null;
             IsRunning = false;
+
+            var s = tracker.GetSnapshot(_runClock.Elapsed);
+            await _history.AddAsync(new RunRecord
+            {
+                StartedAt = startedAt,
+                Duration = _runClock.Elapsed,
+                IsTestRun = testRun,
+                Outcome = outcome,
+                ExitCode = exitCode,
+                FilesDone = s.FilesDone,
+                BytesDone = s.BytesDone,
+                TotalFiles = s.TotalFiles,
+                TotalBytes = s.TotalBytes,
+                FailedFiles = s.FailedFiles,
+                ExtraFiles = s.ExtraFiles,
+                ErrorCount = _errorTotal,
+                LogPath = hasLog ? logPath : null,
+                Job = job,
+            });
         }
+    }
+
+    /// <summary>Puts a past run's settings back into the form. Returns false while a copy is running.</summary>
+    public bool LoadFromHistory(RunRecord run)
+    {
+        if (IsRunning) return false;
+
+        LoadFrom(run.Job);
+        StartButtonText = run.Outcome == RunOutcome.Stopped && !run.IsTestRun ? "Resume" : "Start";
+        ShowStatus(InfoBarSeverity.Informational, "Loaded from history",
+            $"Settings from the run on {run.StartedAt.LocalDateTime:g}. Press {StartButtonText} to run it again; " +
+            "files that are already copied are skipped.");
+        return true;
     }
 
     /// <summary>Refreshes the progress card on the UI thread at a fixed rate, independent of how fast robocopy writes.</summary>
@@ -331,6 +421,17 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         ElapsedText = DisplayFormat.Duration(_runClock.Elapsed);
+
+        if (s.Phase is CopyPhase.Scanning or CopyPhase.Copying)
+        {
+            BarStatusSeverity = InfoBarSeverity.Informational;
+            BarStatusText = string.Join(" · ", new[]
+            {
+                PhaseText,
+                s.Phase == CopyPhase.Scanning ? FilesText : PercentText,
+                EtaText == "–" ? "" : $"{EtaText} left",
+            }.Where(part => part.Length > 0));
+        }
         CurrentFile = s.Phase is CopyPhase.Finished ? "" : s.CurrentFile ?? "";
 
         var newErrors = tracker.DrainErrors(MaxErrorLines, out var dropped);
@@ -409,6 +510,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     private void ShowStatus(InfoBarSeverity severity, string title, string message)
     {
+        BarStatusSeverity = severity;
+        BarStatusText = title;
         StatusSeverity = severity;
         StatusTitle = title;
         StatusMessage = message;

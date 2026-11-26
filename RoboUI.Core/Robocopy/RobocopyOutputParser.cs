@@ -24,6 +24,11 @@ public sealed partial class RobocopyOutputParser
     [GeneratedRegex(@"(?:[A-Za-z]:\\|\\\\).*$")]
     private static partial Regex PathRegex();
 
+    // On a retry robocopy prints "Waiting N seconds...", a carriage return, then the file line
+    // again with " Retrying..." appended. That suffix is not part of the path.
+    [GeneratedRegex(@"\s+Retrying\.\.\.$")]
+    private static partial Regex RetrySuffixRegex();
+
     private ErrorEvent? _pendingError;
 
     /// <summary>
@@ -67,7 +72,8 @@ public sealed partial class RobocopyOutputParser
         if (fileMatch.Success &&
             long.TryParse(fileMatch.Groups["size"].Value, NumberStyles.None, CultureInfo.InvariantCulture, out var size))
         {
-            return new FileEvent(fileMatch.Groups["class"].Value.Trim(), size, fileMatch.Groups["path"].Value);
+            var path = RetrySuffixRegex().Replace(fileMatch.Groups["path"].Value, "");
+            return new FileEvent(fileMatch.Groups["class"].Value.Trim(), size, path);
         }
 
         return null;

@@ -14,6 +14,9 @@ public interface IDialogService
 
     /// <summary>Puts text on the clipboard. Returns false if the clipboard was busy.</summary>
     bool CopyToClipboard(string text);
+
+    /// <summary>Opens a file or folder with its default app (e.g. a log in Notepad). Returns false if it could not.</summary>
+    bool OpenInShell(string path);
 }
 
 public sealed class DialogService : IDialogService
@@ -57,6 +60,19 @@ public sealed class DialogService : IDialogService
             return true;
         }
         catch (System.Runtime.InteropServices.COMException)
+        {
+            return false;
+        }
+    }
+
+    public bool OpenInShell(string path)
+    {
+        try
+        {
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true });
+            return true;
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or FileNotFoundException)
         {
             return false;
         }

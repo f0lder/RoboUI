@@ -20,7 +20,13 @@ public partial class App : Application
         builder.Services.AddSingleton(new RobocopyRunner());
         builder.Services.AddSingleton<IDialogService, DialogService>();
         builder.Services.AddSingleton<IKeepAwakeService, KeepAwakeService>();
+        builder.Services.AddSingleton<RunHistoryService>();
         builder.Services.AddSingleton<MainViewModel>();
+        builder.Services.AddSingleton<HistoryViewModel>();
+        builder.Services.AddSingleton<AboutViewModel>();
+        builder.Services.AddSingleton<Views.HomePage>();
+        builder.Services.AddSingleton<Views.HistoryPage>();
+        builder.Services.AddSingleton<Views.AboutPage>();
         builder.Services.AddSingleton<MainWindow>();
 
         _host = builder.Build();
@@ -29,6 +35,9 @@ public partial class App : Application
         var window = _host.Services.GetRequiredService<MainWindow>();
         MainWindow = window;
         window.Show();
+
+        // Read the saved history in the background; the History page fills in when it is done.
+        _ = _host.Services.GetRequiredService<HistoryViewModel>().LoadAsync();
     }
 
     protected override void OnExit(ExitEventArgs e)

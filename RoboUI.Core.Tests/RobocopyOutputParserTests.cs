@@ -115,6 +115,53 @@ public class RobocopyOutputParserTests
     }
 
     [Fact]
+    public void Retry_suffix_is_not_part_of_the_path()
+    {
+        var evt = Assert.IsType<FileEvent>(new RobocopyOutputParser().ParseLine(
+            "\t    Older     \t\t  110592\tC:\\cloud\\SC45.011.000.0  - Platou.xls Retrying..."));
+        Assert.Equal(@"C:\cloud\SC45.011.000.0  - Platou.xls", evt.Path);
+        Assert.Equal(110592, evt.Size);
+    }
+
+    [Fact]
+    public void Real_cloud_timeout_retry_sequence_counts_the_file_once()
+    {
+        // Captured from a run against an ownCloud online-only file. ReadLine splits on the bare CR
+        // robocopy writes after "Waiting N seconds...", so the reprinted file line arrives on its own.
+        string[] lines =
+        [
+            "\t    Older     \t\t  110592\tC:\\cloud\\Platou.xls",
+            "2026/11/26 11:28:56 ERROR 426 (0x000001AA) Copying File C:\\cloud\\Platou.xls",
+            "The cloud operation was not completed before the time-out period expired.",
+            "Waiting 5 seconds...",
+            "\t    Older     \t\t  110592\tC:\\cloud\\Platou.xls Retrying...",
+            "2026/11/26 11:30:06 ERROR 426 (0x000001AA) Copying File C:\\cloud\\Platou.xls",
+            "The cloud operation was not completed before the time-out period expired.",
+            "Waiting 5 seconds...",
+            "\t    Older     \t\t  110592\tC:\\cloud\\Platou.xls Retrying...",
+            "ERROR: RETRY LIMIT EXCEEDED.",
+            "\t    New File  \t\t       5\tC:\\cloud\\next.txt",
+        ];
+
+        var parser = new RobocopyOutputParser();
+        var tracker = new Progress.CopyProgressTracker();
+        tracker.SetTotals(2, 110597);
+        tracker.SetPhase(Progress.CopyPhase.Copying);
+        foreach (var line in lines)
+            if (parser.ParseLine(line) is { } evt) tracker.Report(evt);
+        tracker.CompletePass(stoppedByUser: false);
+
+        var s = tracker.GetSnapshot(TimeSpan.Zero);
+        Assert.Equal(1, s.FilesDone);      // next.txt
+        Assert.Equal(5, s.BytesDone);
+        Assert.Equal(1, s.FailedFiles);    // Platou.xls, once
+        Assert.Equal(@"C:\cloud\next.txt", s.CurrentFile);
+        var errors = tracker.DrainErrors(10, out _);
+        Assert.Equal(3, errors.Count);
+        Assert.All(errors.Take(2), e => Assert.Equal(426, e.Code));
+    }
+
+    [Fact]
     public void Flush_returns_error_still_waiting_for_message()
     {
         var parser = new RobocopyOutputParser();

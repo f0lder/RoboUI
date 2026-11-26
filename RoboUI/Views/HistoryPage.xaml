@@ -1,0 +1,93 @@
+<Page x:Class="RoboUI.Views.HistoryPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:vm="clr-namespace:RoboUI.ViewModels"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance Type=vm:HistoryViewModel}"
+      Title="History"
+      Foreground="{DynamicResource TextFillColorPrimaryBrush}">
+  <StackPanel Margin="24,8,24,24">
+
+    <!-- Header -->
+    <DockPanel Margin="0,0,0,16">
+      <ui:Button DockPanel.Dock="Right" VerticalAlignment="Center" Content="Clear history"
+                 Icon="{ui:SymbolIcon Delete24}" Command="{Binding ClearCommand}" />
+      <StackPanel>
+        <TextBlock FontSize="24" FontWeight="SemiBold" Text="History" />
+        <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="Your recent runs, newest first. Load puts a run's settings back on Home, so you can run it again or resume it." />
+      </StackPanel>
+    </DockPanel>
+
+    <!-- Problem reading or saving the history file -->
+    <ui:InfoBar Margin="0,0,0,12" Severity="Warning" IsClosable="False" Title="History"
+                Message="{Binding Message}">
+      <ui:InfoBar.Style>
+        <Style TargetType="ui:InfoBar" BasedOn="{StaticResource {x:Type ui:InfoBar}}">
+          <Setter Property="IsOpen" Value="True" />
+          <Style.Triggers>
+            <DataTrigger Binding="{Binding Message}" Value="{x:Null}">
+              <Setter Property="IsOpen" Value="False" />
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </ui:InfoBar.Style>
+    </ui:InfoBar>
+
+    <!-- Empty state -->
+    <ui:Card Padding="24" Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}">
+      <StackPanel HorizontalAlignment="Center">
+        <ui:SymbolIcon Symbol="History24" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}" />
+        <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Text="No runs yet" />
+        <TextBlock HorizontalAlignment="Center" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                   Text="Copies and test runs appear here when they finish or are stopped." />
+      </StackPanel>
+    </ui:Card>
+
+    <!-- Runs -->
+    <ItemsControl ItemsSource="{Binding Items}">
+      <ItemsControl.ItemTemplate>
+        <DataTemplate DataType="{x:Type vm:HistoryItemViewModel}">
+          <ui:Card Margin="0,0,0,8" Padding="16,12">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <StackPanel Margin="0,0,16,0">
+                <DockPanel>
+                  <TextBlock DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center"
+                             Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding When}" />
+                  <StackPanel Orientation="Horizontal">
+                    <Ellipse Width="8" Height="8" Margin="0,1,8,0" VerticalAlignment="Center"
+                             Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                  </StackPanel>
+                </DockPanel>
+                <TextBlock Margin="16,4,0,0" TextWrapping="Wrap" Text="{Binding Paths}" />
+                <TextBlock Margin="16,2,0,0" FontSize="12" TextTrimming="CharacterEllipsis"
+                           Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding Summary}" />
+              </StackPanel>
+
+              <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <ui:Button Margin="0,0,8,0" Content="Open log" Icon="{ui:SymbolIcon DocumentText24}"
+                           Visibility="{Binding HasLog, Converter={StaticResource BoolToVisibility}}"
+                           Command="{Binding DataContext.OpenLogCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                           CommandParameter="{Binding}" />
+                <ui:Button Content="Load" Icon="{ui:SymbolIcon ArrowUpload24}"
+                           ToolTip="Put these settings on the Home page to run again or resume"
+                           Command="{Binding DataContext.LoadCommand, RelativeSource={RelativeSource AncestorType=Page}}"
+                           CommandParameter="{Binding}" />
+              </StackPanel>
+            </Grid>
+          </ui:Card>
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+  </StackPanel>
+</Page>

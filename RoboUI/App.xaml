@@ -13,6 +13,7 @@
 
       <conv:IntToDoubleConverter x:Key="IntToDouble" />
       <conv:EnumToBoolConverter x:Key="EnumToBool" />
+      <conv:SeverityToBrushConverter x:Key="SeverityToBrush" />
 
       <Style x:Key="Legend" TargetType="TextBlock">
         <Setter Property="Margin" Value="0,2,0,0" />
