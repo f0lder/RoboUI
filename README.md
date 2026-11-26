@@ -141,5 +141,4 @@ dotnet test
 
 ## License
 
-<!-- Choose a license (for example MIT) and add a LICENSE file before publishing. -->
-Not yet chosen.
+[MIT](LICENSE) © f0lder
