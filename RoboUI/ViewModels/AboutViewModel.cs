@@ -21,6 +21,16 @@ public sealed partial class AboutViewModel(IDialogService dialogs, AppPaths path
 
     public string LogsFolder => paths.LogsDirectory;
 
+    public const string GitHubUrl = "https://github.com/f0lder";
+    public const string BuyMeACoffeeUrl = "https://buymeacoffee.com/f0lder";
+
+    /// <summary>Opens one of the links above in the default browser.</summary>
+    [RelayCommand]
+    private void OpenLink(string? url)
+    {
+        if (url is GitHubUrl or BuyMeACoffeeUrl) dialogs.OpenInShell(url);
+    }
+
     [RelayCommand]
     private void OpenLogsFolder()
     {

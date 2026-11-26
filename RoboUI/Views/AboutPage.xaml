@@ -74,6 +74,26 @@
       </StackPanel>
     </ui:Card>
 
+    <ui:Card Margin="0,0,0,12" Padding="16">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+          <ui:Button Margin="0,0,8,0" Content="GitHub" Icon="{ui:SymbolIcon Code24}"
+                     ToolTip="{x:Static vm:AboutViewModel.GitHubUrl}"
+                     Command="{Binding OpenLinkCommand}"
+                     CommandParameter="{x:Static vm:AboutViewModel.GitHubUrl}" />
+          <ui:Button Content="Buy me a coffee" Icon="{ui:SymbolIcon DrinkCoffee24}"
+                     ToolTip="{x:Static vm:AboutViewModel.BuyMeACoffeeUrl}"
+                     Command="{Binding OpenLinkCommand}"
+                     CommandParameter="{x:Static vm:AboutViewModel.BuyMeACoffeeUrl}" />
+        </StackPanel>
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Style="{StaticResource CardHeader}" Margin="0,0,0,2" Text="Made by f0lder" />
+          <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                     Text="If RoboUI saves you time, you can support its development." />
+        </StackPanel>
+      </DockPanel>
+    </ui:Card>
+
     <ui:Card Padding="16">
       <StackPanel>
         <TextBlock Style="{StaticResource CardHeader}" Text="Built with" />
