@@ -37,6 +37,10 @@ RoboUI doesn't copy anything itself. `robocopy.exe`, which ships with Windows, d
 |---|---|
 | ![History page](docs/screenshots/history.png) | ![Test run result](docs/screenshots/test-run.png) |
 
+| Settings |
+|---|
+| ![Settings page](docs/screenshots/settings.png) |
+
 ## Requirements
 
 - Windows 10 or Windows 11 (x64)
