@@ -13,6 +13,23 @@
 
     <TextBlock FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Text="Settings" />
 
+    <TextBlock Style="{StaticResource CardHeader}" Text="Appearance" />
+
+    <ui:CardControl Margin="0,0,0,20" Icon="{ui:SymbolIcon DarkTheme24}">
+      <ui:CardControl.Header>
+        <StackPanel>
+          <TextBlock Text="Theme" />
+          <TextBlock Style="{StaticResource Legend}"
+                     Text="&quot;Use Windows setting&quot; follows light or dark mode and the accent colour, and switches along with Windows." />
+        </StackPanel>
+      </ui:CardControl.Header>
+      <ComboBox MinWidth="200"
+                ItemsSource="{Binding ThemeOptions}"
+                DisplayMemberPath="Label"
+                SelectedValuePath="Value"
+                SelectedValue="{Binding Theme}" />
+    </ui:CardControl>
+
     <TextBlock Style="{StaticResource CardHeader}" Text="Notifications" />
 
     <ui:CardControl Margin="0,0,0,4" Icon="{ui:SymbolIcon Alert24}">

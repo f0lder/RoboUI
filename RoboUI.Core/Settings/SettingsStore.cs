@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace RoboUI.Core.Settings;
 
@@ -9,7 +10,11 @@ namespace RoboUI.Core.Settings;
 /// </summary>
 public sealed class SettingsStore(string filePath)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     public string FilePath { get; } = filePath;
 

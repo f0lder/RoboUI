@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RoboUI.Core.Settings;
 using RoboUI.Services;
 
 namespace RoboUI.ViewModels;
@@ -10,17 +11,40 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly NotificationService _notifications;
     private readonly IDialogService _dialogs;
 
-    public SettingsViewModel(SettingsService settings, NotificationService notifications, IDialogService dialogs)
+    private readonly ThemeService _theme;
+
+    public SettingsViewModel(SettingsService settings, NotificationService notifications, IDialogService dialogs, ThemeService theme)
     {
         _settings = settings;
         _notifications = notifications;
         _dialogs = dialogs;
+        _theme = theme;
         NotifyOnFinish = settings.Current.NotifyOnFinish;
         NotifyWhenActive = settings.Current.NotifyWhenActive;
+        Theme = settings.Current.Theme;
         _loaded = true;
     }
 
     private readonly bool _loaded;
+
+    public sealed record ThemeOption(AppTheme Value, string Label);
+
+    public IReadOnlyList<ThemeOption> ThemeOptions { get; } =
+    [
+        new(AppTheme.System, "Use Windows setting"),
+        new(AppTheme.Light, "Light"),
+        new(AppTheme.Dark, "Dark"),
+    ];
+
+    [ObservableProperty] public partial AppTheme Theme { get; set; }
+
+    partial void OnThemeChanged(AppTheme value)
+    {
+        if (!_loaded) return;
+        _settings.Current.Theme = value;
+        _theme.Apply(value);
+        Save();
+    }
 
     [ObservableProperty] public partial bool NotifyOnFinish { get; set; }
     [ObservableProperty] public partial bool NotifyWhenActive { get; set; }

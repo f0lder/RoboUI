@@ -22,6 +22,7 @@ public partial class App : Application
         builder.Services.AddSingleton<IKeepAwakeService, KeepAwakeService>();
         builder.Services.AddSingleton<RunHistoryService>();
         builder.Services.AddSingleton<SettingsService>();
+        builder.Services.AddSingleton<ThemeService>();
         builder.Services.AddSingleton<NotificationService>();
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<HistoryViewModel>();
@@ -41,6 +42,8 @@ public partial class App : Application
 
         var window = _host.Services.GetRequiredService<MainWindow>();
         MainWindow = window;
+        _host.Services.GetRequiredService<ThemeService>()
+            .Apply(_host.Services.GetRequiredService<SettingsService>().Current.Theme);
         window.Show();
 
         // Read the saved history in the background; the History page fills in when it is done.

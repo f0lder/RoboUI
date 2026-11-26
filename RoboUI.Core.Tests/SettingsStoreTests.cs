@@ -19,6 +19,25 @@ public sealed class SettingsStoreTests : IDisposable
 
         Assert.True(settings.NotifyOnFinish);
         Assert.False(settings.NotifyWhenActive);
+        Assert.Equal(AppTheme.System, settings.Theme);
+    }
+
+    [Fact]
+    public void Theme_is_saved_by_name()
+    {
+        new SettingsStore(FilePath).Save(new AppSettings { Theme = AppTheme.Light });
+
+        Assert.Contains("\"Light\"", File.ReadAllText(FilePath));
+        Assert.Equal(AppTheme.Light, new SettingsStore(FilePath).Load().Theme);
+    }
+
+    [Fact]
+    public void Unknown_theme_name_gives_defaults_instead_of_failing()
+    {
+        Directory.CreateDirectory(_dir);
+        File.WriteAllText(FilePath, """{ "Theme": "Purple" }""");
+
+        Assert.Equal(AppTheme.System, new SettingsStore(FilePath).Load().Theme);
     }
 
     [Fact]

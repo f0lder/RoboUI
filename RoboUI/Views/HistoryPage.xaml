@@ -64,8 +64,7 @@
                   <TextBlock DockPanel.Dock="Right" Margin="12,0,0,0" VerticalAlignment="Center"
                              Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding When}" />
                   <StackPanel Orientation="Horizontal">
-                    <Ellipse Width="8" Height="8" Margin="0,1,8,0" VerticalAlignment="Center"
-                             Fill="{Binding Severity, Converter={StaticResource SeverityToBrush}}" />
+                    <Ellipse Style="{StaticResource SeverityDot}" Tag="{Binding Severity}" />
                     <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
                   </StackPanel>
                 </DockPanel>

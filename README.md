@@ -31,7 +31,7 @@ RoboUI doesn't copy anything itself. `robocopy.exe`, which ships with Windows, d
 - **Logs.** Each run writes a Unicode log, which you can open from the app.
 - **Keeps the PC awake** while a copy runs (optional), and asks before closing the window during a copy.
 - **Live command preview** that you can copy and run yourself in a terminal.
-- **Fluent design.** Mica background, sidebar navigation, and a dark theme, built with [WPF UI](https://github.com/lepoco/wpfui).
+- **Fluent design.** Mica background, sidebar navigation, and light and dark themes, built with [WPF UI](https://github.com/lepoco/wpfui). By default RoboUI follows the Windows theme and accent colour. You can choose a fixed theme in **Settings**.
 
 | History | Test run with Mirror |
 |---|---|
@@ -144,8 +144,8 @@ git push origin 0.2.0
 - [x] Notification when a job finishes
 - [x] Start and Stop buttons in the taskbar thumbnail
 - [ ] Optional sleep or shut down after a job, with a countdown
-- [ ] Follow the Windows light/dark theme and accent colour
-- [x] Settings page (notifications)
+- [x] Follow the Windows light/dark theme and accent colour
+- [x] Settings page (theme, notifications)
 
 ## Built with
 

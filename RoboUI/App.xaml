@@ -13,7 +13,26 @@
 
       <conv:IntToDoubleConverter x:Key="IntToDouble" />
       <conv:EnumToBoolConverter x:Key="EnumToBool" />
-      <conv:SeverityToBrushConverter x:Key="SeverityToBrush" />
+
+      <!-- A small status dot coloured by the InfoBarSeverity in Tag. DynamicResource, so it follows theme changes. -->
+      <Style x:Key="SeverityDot" TargetType="Ellipse">
+        <Setter Property="Width" Value="8" />
+        <Setter Property="Height" Value="8" />
+        <Setter Property="Margin" Value="0,1,8,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Fill" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+        <Style.Triggers>
+          <Trigger Property="Tag" Value="{x:Static ui:InfoBarSeverity.Success}">
+            <Setter Property="Fill" Value="{DynamicResource SystemFillColorSuccessBrush}" />
+          </Trigger>
+          <Trigger Property="Tag" Value="{x:Static ui:InfoBarSeverity.Warning}">
+            <Setter Property="Fill" Value="{DynamicResource SystemFillColorCautionBrush}" />
+          </Trigger>
+          <Trigger Property="Tag" Value="{x:Static ui:InfoBarSeverity.Error}">
+            <Setter Property="Fill" Value="{DynamicResource SystemFillColorCriticalBrush}" />
+          </Trigger>
+        </Style.Triggers>
+      </Style>
 
       <Style x:Key="Legend" TargetType="TextBlock">
         <Setter Property="Margin" Value="0,2,0,0" />
