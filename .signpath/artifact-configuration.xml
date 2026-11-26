@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath artifact configuration for RoboUI. Paste this into the RoboUI project in SignPath
+  (Project > Artifact configurations). The release workflow uploads RoboUI.exe as a GitHub
+  artifact, which arrives as a ZIP, and passes the release tag as the "version" parameter.
+  As the SignPath Foundation terms require, the product name and version are enforced.
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file path="RoboUI.exe" product-name="RoboUI" product-version="${version}">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

@@ -5,6 +5,8 @@
 #
 # The tag sets the app version, so the <Version> in RoboUI.csproj doesn't need to be edited.
 # If the WINGET_TOKEN secret exists, a pull request updating f0lder.RoboUI in winget-pkgs is opened too.
+# If the SIGNPATH_API_TOKEN secret exists, the exe is code-signed through SignPath first
+# (see .signpath/README.md for the one-time setup).
 name: Release
 
 on:
@@ -17,6 +19,8 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -41,6 +45,42 @@ jobs:
           -p:EnableCompressionInSingleFile=true -p:DebugType=None
           -p:Version=${{ steps.version.outputs.version }}
           -o publish
+
+      # ---- Code signing (SignPath Foundation) --------------------------------------------------
+      # Runs only once the SIGNPATH_API_TOKEN secret exists; until then the release is unsigned.
+      # Every signing request has to be approved in SignPath, so this step waits for that.
+      - name: Upload unsigned exe
+        id: upload-unsigned
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoboUI-unsigned
+          path: publish/RoboUI.exe
+          if-no-files-found: error
+
+      - name: Sign with SignPath
+        if: env.SIGNPATH_API_TOKEN != ''
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'RoboUI' }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG || 'release-signing' }}
+          github-artifact-id: ${{ steps.upload-unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 7200
+          output-artifact-directory: signed
+          parameters: |
+            version: ${{ toJSON(steps.version.outputs.version) }}
+
+      - name: Use signed exe
+        if: env.SIGNPATH_API_TOKEN != ''
+        shell: pwsh
+        run: |
+          Copy-Item signed/RoboUI.exe publish/RoboUI.exe -Force
+          $signature = Get-AuthenticodeSignature publish/RoboUI.exe
+          "Signature: $($signature.Status) by $($signature.SignerCertificate.Subject)"
+          if ($signature.Status -ne 'Valid') { throw 'The exe that came back from SignPath is not validly signed.' }
 
       - name: Create GitHub release
         shell: pwsh

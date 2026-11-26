@@ -95,6 +95,19 @@ After closing the app, open **History** and press **Load** on the stopped run. T
 
 Nothing is sent anywhere. RoboUI has no telemetry and doesn't check for updates.
 
+## Privacy policy
+
+This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it. The only network access happens when you click the GitHub or Buy me a coffee links on the About page, which open in your browser.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
+
+- Committers and reviewers: [f0lder](https://github.com/f0lder)
+- Approvers: [f0lder](https://github.com/f0lder)
+
+Release builds are made by [GitHub Actions](.github/workflows/release.yml) from the tagged source, and every signing request is approved by hand.
+
 ## Project structure
 
 ```

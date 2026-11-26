@@ -8,6 +8,13 @@
     <UseWPF>true</UseWPF>
     <ApplicationIcon>Assets\RoboUI.ico</ApplicationIcon>
     <Version>0.1.0</Version>
+    <!-- File details shown in Explorer, and checked by code signing: product version = release tag, no "+commit" suffix. -->
+    <Product>RoboUI</Product>
+    <AssemblyTitle>RoboUI</AssemblyTitle>
+    <Company>f0lder</Company>
+    <Copyright>Copyright (c) 2026 f0lder</Copyright>
+    <Description>A modern Windows front end for robocopy</Description>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
