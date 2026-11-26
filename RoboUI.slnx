@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="RoboUI.Core.Tests/RoboUI.Core.Tests.csproj" />
+  <Project Path="RoboUI.Core/RoboUI.Core.csproj" />
+  <Project Path="RoboUI/RoboUI.csproj" />
+</Solution>
